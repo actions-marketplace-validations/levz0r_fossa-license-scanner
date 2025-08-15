@@ -31,76 +31,76 @@ module.exports = async ({github, context, core}) => {
   const projectName = process.env.FOSSA_PROJECT || 'unknown';
   
   // Build comment message
-  let message = "## 🔍 FOSSA License Scan Results\\n\\n";
+  let message = "## 🔍 FOSSA License Scan Results\n\n";
   
   // Check if we have issues in the results
   const hasIssues = fossaResults && Array.isArray(fossaResults) && fossaResults.length > 0;
   
   if (hasIssues) {
-    message += "### ⚠️ License Compliance Issues Found\\n\\n";
-    message += `Found ${fossaResults.length} license policy violation${fossaResults.length > 1 ? 's' : ''}:\\n\\n`;
+    message += "### ⚠️ License Compliance Issues Found\n\n";
+    message += `Found ${fossaResults.length} license policy violation${fossaResults.length > 1 ? 's' : ''}:\n\n`;
     
     fossaResults.forEach((issue, index) => {
-      message += `**${index + 1}. License Policy Violation**\\n`;
+      message += `**${index + 1}. License Policy Violation**\n`;
       
       if (issue.license) {
-        message += `- **License**: ${issue.license}\\n`;
+        message += `- **License**: ${issue.license}\n`;
       }
       
       if (issue.revisionId) {
         // Extract package name from revisionId (format: npm+package@version)
-        const packageMatch = issue.revisionId.match(/npm\\+([^$]+)\\$/);
+        const packageMatch = issue.revisionId.match(/npm\+([^$]+)$/);
         const packageName = packageMatch ? packageMatch[1] : issue.revisionId;
-        message += `- **Package**: \`${packageName}\`\\n`;
+        message += `- **Package**: \`${packageName}\`\n`;
       }
       
       if (issue.type) {
-        message += `- **Type**: ${issue.type}\\n`;
+        message += `- **Type**: ${issue.type}\n`;
       }
       
       if (issue.rule && issue.rule.title) {
-        message += `- **Rule**: ${issue.rule.title}\\n`;
+        message += `- **Rule**: ${issue.rule.title}\n`;
       }
       
       if (issue.issueDashURL) {
-        message += `- **Details**: [View in FOSSA Dashboard](${issue.issueDashURL})\\n`;
+        message += `- **Details**: [View in FOSSA Dashboard](${issue.issueDashURL})\n`;
       }
       
-      message += "\\n";
+      message += "\n";
     });
     
-    message += "### 📋 Next Steps\\n";
-    message += "1. Review the license violations above\\n";
-    message += "2. Consider replacing dependencies with incompatible licenses\\n";
-    message += "3. Consult with legal team if needed\\n";
-    message += "4. Update your project's license policy if appropriate\\n\\n";
+    message += "### 📋 Next Steps\n";
+    message += "1. Review the license violations above\n";
+    message += "2. Consider replacing dependencies with incompatible licenses\n";
+    message += "3. Consult with legal team if needed\n";
+    message += "4. Update your project's license policy if appropriate\n\n";
     
   } else if (exitCode === '0') {
-    message += "### ✅ All Clear!\\n\\n";
-    message += "No license compliance issues found. Your dependencies are compliant with the configured policies.\\n\\n";
+    message += "### ✅ All Clear!\n\n";
+    message += "No license compliance issues found. Your dependencies are compliant with the configured policies.\n\n";
     
   } else if (exitCode === '1' && !hasIssues) {
-    message += "### ❌ Policy Violations Found\\n\\n";
-    message += "FOSSA detected license policy violations, but could not parse the detailed results. Please check the workflow logs and FOSSA dashboard for details.\\n\\n";
+    message += "### ❌ Policy Violations Found\n\n";
+    message += "FOSSA detected license policy violations, but could not parse the detailed results. Please check the workflow logs and FOSSA dashboard for details.\n\n";
     
   } else {
-    message += "### ❌ Scan Failed\\n\\n";
-    message += `The FOSSA scan encountered an error (exit code: ${exitCode}). Please check the workflow logs for details.\\n\\n`;
+    message += "### ❌ Scan Failed\n\n";
+    message += `The FOSSA scan encountered an error (exit code: ${exitCode}). Please check the workflow logs for details.\n\n`;
   }
   
   // Add summary statistics
-  message += "### 📊 Scan Summary\\n";
-  message += `- **Project**: ${projectName}\\n`;
-  message += `- **Violations Found**: ${violationsFound ? 'Yes' : 'No'}\\n`;
+  message += "### 📊 Scan Summary\n";
+  message += `- **Project**: ${projectName}\n`;
+  message += `- **Violations Found**: ${violationsFound ? 'Yes' : 'No'}\n`;
   if (violationsFound) {
-    message += `- **Total Violations**: ${violationsCount}\\n`;
+    message += `- **Total Violations**: ${violationsCount}\n`;
   }
-  message += `- **Exit Code**: ${exitCode}\\n\\n`;
+  message += `- **Exit Code**: ${exitCode}\n\n`;
   
   // Add footer with links
-  message += "---\\n";
-  message += `🔗 [View detailed report in FOSSA Dashboard](https://app.fossa.com/projects/custom%2B41069%2F${projectName})\\n`;
-  message += `📊 [FOSSA Status](https://app.fossa.com/projects/custom%2B41069%2F${projectName}?ref=badge_small)\\n\\n`;
+  message += "---\n";
+  message += `🔗 [View detailed report in FOSSA Dashboard](https://app.fossa.com/projects/custom%2B41069%2F${projectName})\n`;
+  message += `📊 [FOSSA Status](https://app.fossa.com/projects/custom%2B41069%2F${projectName}?ref=badge_small)\n\n`;
   message += "*Scan powered by [FOSSA License Scanner](https://github.com/marketplace/actions/fossa-license-scanner)*";
   
   console.log('Posting PR comment with FOSSA results...');

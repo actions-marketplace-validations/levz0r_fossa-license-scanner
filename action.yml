@@ -77,3 +77,5 @@ runs:
           const scriptPath = '${{ github.action_path }}/scripts/pr-comment.js';
           const script = require(scriptPath);
           await script({github, context, core});
+      env:
+        FOSSA_PROJECT: ${{ inputs.project }}

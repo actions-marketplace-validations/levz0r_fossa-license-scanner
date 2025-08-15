@@ -1,6 +1,6 @@
 # FOSSA License Scanner
 
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Flevgelfenbuim%2Ffossa-license-scanner.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Flevz0r%2Ffossa-license-scanner?ref=badge_shield)
+[![FOSSA Status](https://app.fossa.com/api/projects/custom%2B56511%2Ffossa-license-scanner-demo.svg?type=small)](https://app.fossa.com/projects/custom%2B56511%2Ffossa-license-scanner-demo?ref=badge_small)
 
 A comprehensive GitHub Action for FOSSA license scanning with detailed PR comments and policy violation reporting. This action combines FOSSA analysis with intelligent reporting to help maintain license compliance in your projects.
 
@@ -25,11 +25,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: FOSSA License Scan
-        uses: levgelfenbuim/fossa-license-scanner@v1
+        uses: levz0r/fossa-license-scanner@v1
         with:
           api-key: ${{ secrets.FOSSA_API_KEY }}
           project: "my-project"
 ```
+
+> 💡 **Want to see it in action?** Check out our [comprehensive demo workflow](.github/workflows/demo.yml) that showcases all features with real examples you can test immediately!
 
 ## Usage
 
@@ -37,7 +39,7 @@ jobs:
 
 ```yaml
 - name: FOSSA License Scan
-  uses: levgelfenbuim/fossa-license-scanner@v1
+  uses: levz0r/fossa-license-scanner@v1
   with:
     api-key: ${{ secrets.FOSSA_API_KEY }}
     project: "my-project"
@@ -47,7 +49,7 @@ jobs:
 
 ```yaml
 - name: FOSSA License Scan
-  uses: levgelfenbuim/fossa-license-scanner@v1
+  uses: levz0r/fossa-license-scanner@v1
   with:
     api-key: ${{ secrets.FOSSA_API_KEY }}
     project: "my-project"
@@ -80,7 +82,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run FOSSA License Scan
-        uses: levgelfenbuim/fossa-license-scanner@v1
+        uses: levz0r/fossa-license-scanner@v1
         with:
           api-key: ${{ secrets.FOSSA_API_KEY }}
           project: "my-awesome-project"
@@ -215,7 +217,7 @@ The action works with any project that FOSSA supports:
 - name: Install dependencies
   run: npm install
 - name: FOSSA Scan
-  uses: levgelfenbuim/fossa-license-scanner@v1
+  uses: levz0r/fossa-license-scanner@v1
   with:
     api-key: ${{ secrets.FOSSA_API_KEY }}
     project: "my-node-app"
@@ -226,7 +228,7 @@ The action works with any project that FOSSA supports:
 - name: Install dependencies
   run: pip install -r requirements.txt
 - name: FOSSA Scan
-  uses: levgelfenbuim/fossa-license-scanner@v1
+  uses: levz0r/fossa-license-scanner@v1
   with:
     api-key: ${{ secrets.FOSSA_API_KEY }}
     project: "my-python-app"
@@ -242,7 +244,7 @@ strategy:
 steps:
   - uses: actions/checkout@v4
   - name: FOSSA Scan
-    uses: levgelfenbuim/fossa-license-scanner@v1
+    uses: levz0r/fossa-license-scanner@v1
     with:
       api-key: ${{ secrets.FOSSA_API_KEY }}
       project: ${{ matrix.project }}
@@ -253,7 +255,7 @@ steps:
 ```yaml
 - name: FOSSA Scan
   if: github.event_name == 'pull_request'
-  uses: levgelfenbuim/fossa-license-scanner@v1
+  uses: levz0r/fossa-license-scanner@v1
   with:
     api-key: ${{ secrets.FOSSA_API_KEY }}
     project: "my-project"
@@ -279,7 +281,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Support
 
 - 📧 Email: [hi@lev.engineer](mailto:hi@lev.engineer)
-- 🐛 Issues: [GitHub Issues](https://github.com/levgelfenbuim/fossa-license-scanner/issues)
+- 🐛 Issues: [GitHub Issues](https://github.com/levz0r/fossa-license-scanner/issues)
 - 📖 FOSSA Documentation: [FOSSA Docs](https://docs.fossa.com)
 
 ## Related
@@ -290,4 +292,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-_Made with ❤️ by [Lev Gelfenbuim](https://github.com/levgelfenbuim)_
+_Made with ❤️ by [Lev Gelfenbuim](https://github.com/levz0r)_

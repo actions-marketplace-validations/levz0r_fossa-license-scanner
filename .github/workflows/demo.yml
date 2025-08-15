@@ -1,0 +1,319 @@
+name: 'FOSSA License Scanner Demo'
+
+# This workflow demonstrates various usage patterns of the FOSSA License Scanner action
+# You can use this as a reference for integrating the action into your own projects
+
+on:
+  # Trigger on pull requests for demonstration
+  pull_request:
+    branches: [ main, develop ]
+  
+  # Trigger on pushes to main branch
+  push:
+    branches: [ main ]
+  
+  # Allow manual triggering for testing
+  workflow_dispatch:
+    inputs:
+      demo_project:
+        description: 'Demo project name for FOSSA'
+        required: false
+        default: 'fossa-license-scanner-demo'
+      fail_on_violations:
+        description: 'Fail on license violations'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+# Required permissions for the action to work properly
+permissions:
+  contents: read        # Required for checkout
+  pull-requests: write  # Required for PR comments
+
+env:
+  # Demo project name - replace with your actual FOSSA project name
+  DEMO_PROJECT: ${{ github.event.inputs.demo_project || 'fossa-license-scanner-demo' }}
+
+jobs:
+  # Basic demo - minimal configuration
+  basic-demo:
+    name: '📋 Basic FOSSA Scan'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run Basic FOSSA Scan
+        id: basic-scan
+        uses: ./  # Use the local action for testing
+        with:
+          api-key: ${{ secrets.FOSSA_API_KEY }}
+          project: ${{ env.DEMO_PROJECT }}
+      
+      - name: Display basic scan results
+        if: always()
+        run: |
+          echo "🔍 Basic Scan Results:"
+          echo "  Violations Found: ${{ steps.basic-scan.outputs.violations-found }}"
+          echo "  Violations Count: ${{ steps.basic-scan.outputs.violations-count }}"
+          echo "  Dashboard URL: ${{ steps.basic-scan.outputs.dashboard-url }}"
+
+  # Advanced demo - full configuration with all options
+  advanced-demo:
+    name: '⚙️ Advanced FOSSA Scan'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run Advanced FOSSA Scan
+        id: advanced-scan
+        uses: ./  # Use the local action for testing
+        with:
+          api-key: ${{ secrets.FOSSA_API_KEY }}
+          project: ${{ env.DEMO_PROJECT }}
+          branch: ${{ github.head_ref || github.ref_name }}
+          fail-on-violations: ${{ github.event.inputs.fail_on_violations || 'true' }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Display advanced scan results
+        if: always()
+        run: |
+          echo "🔍 Advanced Scan Results:"
+          echo "  Violations Found: ${{ steps.advanced-scan.outputs.violations-found }}"
+          echo "  Violations Count: ${{ steps.advanced-scan.outputs.violations-count }}"
+          echo "  Dashboard URL: ${{ steps.advanced-scan.outputs.dashboard-url }}"
+          echo "  Branch: ${{ github.head_ref || github.ref_name }}"
+          echo "  Event Type: ${{ github.event_name }}"
+
+  # Matrix demo - scanning multiple projects/environments
+  matrix-demo:
+    name: '🔀 Matrix FOSSA Scan'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: ['dev', 'staging', 'prod']
+        include:
+          - environment: 'dev'
+            fail_on_violations: false
+            project_suffix: '-dev'
+          - environment: 'staging'
+            fail_on_violations: true
+            project_suffix: '-staging'
+          - environment: 'prod'
+            fail_on_violations: true
+            project_suffix: '-prod'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run Matrix FOSSA Scan for ${{ matrix.environment }}
+        id: matrix-scan
+        uses: ./  # Use the local action for testing
+        with:
+          api-key: ${{ secrets.FOSSA_API_KEY }}
+          project: ${{ env.DEMO_PROJECT }}${{ matrix.project_suffix }}
+          fail-on-violations: ${{ matrix.fail_on_violations }}
+      
+      - name: Display matrix scan results for ${{ matrix.environment }}
+        if: always()
+        run: |
+          echo "🔍 ${{ matrix.environment }} Environment Scan Results:"
+          echo "  Project: ${{ env.DEMO_PROJECT }}${{ matrix.project_suffix }}"
+          echo "  Violations Found: ${{ steps.matrix-scan.outputs.violations-found }}"
+          echo "  Violations Count: ${{ steps.matrix-scan.outputs.violations-count }}"
+          echo "  Fail on Violations: ${{ matrix.fail_on_violations }}"
+
+  # Conditional demo - different behavior for different events
+  conditional-demo:
+    name: '🎯 Conditional FOSSA Scan'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # Only scan on pull requests with strict enforcement
+      - name: Run Strict FOSSA Scan (PR only)
+        if: github.event_name == 'pull_request'
+        id: pr-scan
+        uses: ./  # Use the local action for testing
+        with:
+          api-key: ${{ secrets.FOSSA_API_KEY }}
+          project: ${{ env.DEMO_PROJECT }}
+          fail-on-violations: true
+      
+      # More lenient scan on pushes to main
+      - name: Run Lenient FOSSA Scan (Push to main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        id: main-scan
+        uses: ./  # Use the local action for testing
+        with:
+          api-key: ${{ secrets.FOSSA_API_KEY }}
+          project: ${{ env.DEMO_PROJECT }}
+          fail-on-violations: false
+      
+      # Manual workflow dispatch with custom settings
+      - name: Run Custom FOSSA Scan (Manual)
+        if: github.event_name == 'workflow_dispatch'
+        id: manual-scan
+        uses: ./  # Use the local action for testing
+        with:
+          api-key: ${{ secrets.FOSSA_API_KEY }}
+          project: ${{ github.event.inputs.demo_project }}
+          fail-on-violations: ${{ github.event.inputs.fail_on_violations }}
+      
+      - name: Display conditional scan results
+        if: always()
+        run: |
+          echo "🔍 Conditional Scan Results:"
+          echo "  Event Type: ${{ github.event_name }}"
+          echo "  Ref: ${{ github.ref }}"
+          
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "  PR Scan - Violations Found: ${{ steps.pr-scan.outputs.violations-found }}"
+            echo "  PR Scan - Violations Count: ${{ steps.pr-scan.outputs.violations-count }}"
+          elif [ "${{ github.event_name }}" = "push" ]; then
+            echo "  Main Scan - Violations Found: ${{ steps.main-scan.outputs.violations-found }}"
+            echo "  Main Scan - Violations Count: ${{ steps.main-scan.outputs.violations-count }}"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "  Manual Scan - Violations Found: ${{ steps.manual-scan.outputs.violations-found }}"
+            echo "  Manual Scan - Violations Count: ${{ steps.manual-scan.outputs.violations-count }}"
+          fi
+
+  # Output usage demo - using scan results in subsequent steps
+  output-demo:
+    name: '📤 Output Usage Demo'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run FOSSA Scan for Output Demo
+        id: output-scan
+        uses: ./  # Use the local action for testing
+        with:
+          api-key: ${{ secrets.FOSSA_API_KEY }}
+          project: ${{ env.DEMO_PROJECT }}
+          fail-on-violations: false  # Don't fail so we can demo outputs
+      
+      - name: Create compliance report
+        if: always()
+        run: |
+          echo "# License Compliance Report" > compliance-report.md
+          echo "" >> compliance-report.md
+          echo "**Project:** ${{ env.DEMO_PROJECT }}" >> compliance-report.md
+          echo "**Scan Date:** $(date)" >> compliance-report.md
+          echo "**Branch:** ${{ github.head_ref || github.ref_name }}" >> compliance-report.md
+          echo "" >> compliance-report.md
+          
+          if [ "${{ steps.output-scan.outputs.violations-found }}" = "true" ]; then
+            echo "## ⚠️ License Violations Detected" >> compliance-report.md
+            echo "" >> compliance-report.md
+            echo "**Number of violations:** ${{ steps.output-scan.outputs.violations-count }}" >> compliance-report.md
+            echo "" >> compliance-report.md
+            echo "Please review the violations in the [FOSSA Dashboard](${{ steps.output-scan.outputs.dashboard-url }})." >> compliance-report.md
+          else
+            echo "## ✅ No License Violations" >> compliance-report.md
+            echo "" >> compliance-report.md
+            echo "All dependencies comply with the configured license policies." >> compliance-report.md
+          fi
+          
+          echo "" >> compliance-report.md
+          echo "---" >> compliance-report.md
+          echo "*Report generated by FOSSA License Scanner*" >> compliance-report.md
+      
+      - name: Upload compliance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-compliance-report
+          path: compliance-report.md
+      
+      - name: Send notification based on results
+        if: always()
+        run: |
+          if [ "${{ steps.output-scan.outputs.violations-found }}" = "true" ]; then
+            echo "🚨 License violations detected! Count: ${{ steps.output-scan.outputs.violations-count }}"
+            echo "::warning title=License Violations::Found ${{ steps.output-scan.outputs.violations-count }} license policy violations"
+            # In a real scenario, you might send Slack notifications, emails, etc.
+          else
+            echo "✅ License compliance check passed!"
+            echo "::notice title=Compliance Success::All dependencies are compliant with license policies"
+          fi
+      
+      - name: Set job summary
+        if: always()
+        run: |
+          echo "## 📋 FOSSA License Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Project | ${{ env.DEMO_PROJECT }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Violations Found | ${{ steps.output-scan.outputs.violations-found }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Violations Count | ${{ steps.output-scan.outputs.violations-count }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dashboard | [View Results](${{ steps.output-scan.outputs.dashboard-url }}) |" >> $GITHUB_STEP_SUMMARY
+
+  # Integration demo - showing real project integration patterns
+  integration-demo:
+    name: '🔗 Integration Patterns Demo'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      # Example: Node.js project setup
+      - name: Setup Node.js (Demo)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      # Note: In a real project, you would run: npm install
+      - name: Install dependencies (Demo - Skipped)
+        run: |
+          echo "In a real Node.js project, you would run:"
+          echo "npm install"
+          echo "This ensures FOSSA can analyze your actual dependencies"
+      
+      # Example: Python project setup
+      - name: Setup Python (Demo)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      # Note: In a real project, you would run: pip install -r requirements.txt
+      - name: Install Python dependencies (Demo - Skipped)
+        run: |
+          echo "In a real Python project, you would run:"
+          echo "pip install -r requirements.txt"
+          echo "This ensures FOSSA can analyze your Python dependencies"
+      
+      - name: Run FOSSA Scan with Integration Context
+        id: integration-scan
+        uses: ./  # Use the local action for testing
+        with:
+          api-key: ${{ secrets.FOSSA_API_KEY }}
+          project: ${{ env.DEMO_PROJECT }}
+          fail-on-violations: ${{ github.event_name == 'pull_request' }}
+      
+      - name: Integration scan results
+        if: always()
+        run: |
+          echo "🔗 Integration Demo Results:"
+          echo "  This demonstrates how to integrate FOSSA scanning into existing CI/CD pipelines"
+          echo "  Violations Found: ${{ steps.integration-scan.outputs.violations-found }}"
+          echo "  Dashboard: ${{ steps.integration-scan.outputs.dashboard-url }}"
+          echo ""
+          echo "💡 Integration Tips:"
+          echo "  1. Run dependency installation before FOSSA scan"
+          echo "  2. Use different failure modes for different environments"
+          echo "  3. Upload scan results as artifacts for compliance tracking"
+          echo "  4. Integrate with notification systems for violations"
