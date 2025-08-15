@@ -1,0 +1,79 @@
+name: 'FOSSA License Scanner'
+description: 'Comprehensive FOSSA license scanning with detailed PR comments and policy violation reporting'
+author: 'Lev Gelfenbuim (hi@lev.engineer)'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  api-key:
+    description: 'FOSSA API key for authentication'
+    required: true
+  
+  project:
+    description: 'Project name in FOSSA (must match your FOSSA project configuration)'
+    required: true
+  
+  branch:
+    description: 'Branch name to scan (defaults to current branch)'
+    required: false
+    default: ${{ github.head_ref || github.ref_name }}
+  
+  fail-on-violations:
+    description: 'Whether to fail the action when license policy violations are found'
+    required: false
+    default: 'true'
+  
+  github-token:
+    description: 'GitHub token for posting PR comments (defaults to github.token)'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  violations-found:
+    description: 'Boolean indicating whether license policy violations were detected'
+    value: ${{ steps.fossa-scan.outputs.violations-found }}
+  
+  violations-count:
+    description: 'Number of license policy violations found'
+    value: ${{ steps.fossa-scan.outputs.violations-count }}
+  
+  dashboard-url:
+    description: 'URL to the FOSSA dashboard for this project'
+    value: ${{ steps.fossa-scan.outputs.dashboard-url }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run FOSSA analyze
+      shell: bash
+      run: |
+        # Install FOSSA CLI
+        curl -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/fossas/fossa-cli/master/install-latest.sh | bash
+        
+        # Run FOSSA analyze
+        fossa analyze --project "${{ inputs.project }}" --branch "${{ inputs.branch }}"
+      env:
+        FOSSA_API_KEY: ${{ inputs.api-key }}
+    
+    - name: Run FOSSA test and generate report
+      id: fossa-scan
+      shell: bash
+      run: ${{ github.action_path }}/scripts/fossa-scan.sh
+      env:
+        FOSSA_API_KEY: ${{ inputs.api-key }}
+        FOSSA_PROJECT: ${{ inputs.project }}
+        FAIL_ON_VIOLATIONS: ${{ inputs.fail-on-violations }}
+    
+    - name: Post PR comment
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          const scriptPath = '${{ github.action_path }}/scripts/pr-comment.js';
+          const script = require(scriptPath);
+          await script({github, context, core});
